@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "499960298571",
+    "project_id": "pictionis-bee13",
+    "storage_bucket": "pictionis-bee13.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:499960298571:android:59591784c783882abc21ce",
+        "android_client_info": {
+          "package_name": "com.example.pictionis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "499960298571-gqn14rhennnefpto23h8dftubdqm9gm1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbV6soprHi_a6GrADfFRHePyVSqqJmIXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "499960298571-gqn14rhennnefpto23h8dftubdqm9gm1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
