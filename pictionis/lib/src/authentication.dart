@@ -14,26 +14,32 @@ class AuthFunc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: StyledButton(
-              onPressed: () {
-                !loggedIn
-                    ? Navigator.of(context).pushNamed('/sign-in')
-                    : signOut();
-              },
-              child: !loggedIn ? const Text('Sign In') : const Text('Logout')),
+        Visibility(
+          visible: loggedIn,
+          child:
+              StyledButton(onPressed: () {}, child: const Text('Create Room')),
         ),
         Visibility(
-            visible: loggedIn,
-            child: Expanded(
-              child: StyledButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/profile');
-                  },
-                  child: const Text('Profile')),
-            ))
+          visible: loggedIn,
+          child: StyledButton(onPressed: () {}, child: const Text('Join Room')),
+        ),
+        Visibility(
+          visible: loggedIn,
+          child: StyledButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/profile');
+              },
+              child: const Text('Profile')),
+        ),
+        StyledButton(
+            onPressed: () {
+              !loggedIn
+                  ? Navigator.of(context).pushNamed('/sign-in')
+                  : signOut();
+            },
+            child: !loggedIn ? const Text('Sign In') : const Text('Logout')),
       ],
     );
   }
