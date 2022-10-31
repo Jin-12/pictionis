@@ -14,6 +14,27 @@ class Header extends StatelessWidget {
       );
 }
 
+class CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  const CustomTextField(
+      {super.key, required this.controller, required this.hintText});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          filled: true,
+          hintText: hintText,
+        ),
+      ),
+    );
+  }
+}
+
 class Paragraph extends StatelessWidget {
   const Paragraph(this.content, {super.key});
   final String content;

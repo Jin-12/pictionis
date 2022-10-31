@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart'
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pictionis/screens/create_room_screen.dart';
+import 'package:pictionis/screens/join_room_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -21,7 +23,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -81,7 +82,13 @@ class MyApp extends StatelessWidget {
               ),
             ],
           );
-        })
+        }),
+        JoinRoomScreen.routeName: (context) {
+          return const JoinRoomScreen();
+        },
+        CreateRoomScreen.routeName: (context) {
+          return const CreateRoomScreen();
+        }
       },
       title: 'Pictionis',
       theme: ThemeData(

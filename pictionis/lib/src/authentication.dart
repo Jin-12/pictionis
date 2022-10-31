@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pictionis/screens/create_room_screen.dart';
+import 'package:pictionis/screens/join_room_screen.dart';
 
 import 'widgets.dart';
 
@@ -12,18 +14,33 @@ class AuthFunc extends StatelessWidget {
   final bool loggedIn;
   final void Function() signOut;
 
+  void createRoom(BuildContext context) {
+    Navigator.pushNamed(context, CreateRoomScreen.routeName);
+  }
+
+  void joinRoom(BuildContext context) {
+    Navigator.pushNamed(context, JoinRoomScreen.routeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Visibility(
           visible: loggedIn,
-          child:
-              StyledButton(onPressed: () {}, child: const Text('Create Room')),
+          child: StyledButton(
+              onPressed: () {
+                createRoom(context);
+              },
+              child: const Text('Create Room')),
         ),
         Visibility(
           visible: loggedIn,
-          child: StyledButton(onPressed: () {}, child: const Text('Join Room')),
+          child: StyledButton(
+              onPressed: () {
+                joinRoom(context);
+              },
+              child: const Text('Join Room')),
         ),
         Visibility(
           visible: loggedIn,
