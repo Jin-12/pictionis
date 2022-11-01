@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
+import 'package:pictionis/screens/game_screen.dart';
 import 'package:pictionis/src/widgets.dart';
 
 class CreateRoomScreen extends StatefulWidget {
@@ -24,8 +28,32 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                 const Header('Create Room'),
                 CustomTextField(
                     controller: _nameController, hintText: 'Enter your pseudo'),
-                StyledButton(onPressed: () {}, child: const Text('Create')),
+                StyledButton(
+                    onPressed: () {
+                      final hostName = _nameController.text;
+                      createRoom(hostName);
+                    },
+                    child: const Text('Create')),
               ],
             )));
+  }
+
+  void createRoom(String hostName) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    final room = {
+      'host': user?.uid,
+      'host_name': hostName,
+      'players': [user?.uid],
+      'current_round': 1,
+      'joinable': true,
+      'created_at': DateTime.now(),
+      'turn': 0,
+    };
+
+    FirebaseFirestore.instance.collection('rooms').add(room).then(
+        (DocumentReference doc) =>
+            print('"DocumentSnapshot added with ID: ${doc.id}'));
+    Navigator.pushNamed(context, GameScreen.routeName);
   }
 }

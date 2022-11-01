@@ -3,16 +3,19 @@ import 'package:firebase_auth/firebase_auth.dart'
     hide EmailAuthProvider, PhoneAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pictionis/screens/create_room_screen.dart';
+import 'package:pictionis/screens/game_screen.dart';
 import 'package:pictionis/screens/join_room_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 import 'src/authentication.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
 
   runApp(ChangeNotifierProvider(
     create: (context) => ApplicationState(),
@@ -48,6 +51,14 @@ class MyApp extends StatelessWidget {
                   }
                   if (state is UserCreated) {
                     user.updateDisplayName(user.email!.split('@')[0]);
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .set({
+                      'name': user.displayName,
+                      'email': user.email,
+                    }).then((value) => print(
+                            "DocumentSnapshot added with ID: ${user.uid}"));
                   }
                   if (!user.emailVerified) {
                     user.sendEmailVerification();
@@ -88,6 +99,9 @@ class MyApp extends StatelessWidget {
         },
         CreateRoomScreen.routeName: (context) {
           return const CreateRoomScreen();
+        },
+        GameScreen.routeName: (context) {
+          return const GameScreen();
         }
       },
       title: 'Pictionis',
