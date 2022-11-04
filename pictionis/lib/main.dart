@@ -146,6 +146,8 @@ class ApplicationState extends ChangeNotifier {
 
   bool _loggedIn = false;
   bool get loggedIn => _loggedIn;
+  Map<String, dynamic> _roomData = {};
+  Map<String, dynamic> get roomData => _roomData;
 
   Future<void> init() async {
     await Firebase.initializeApp(
@@ -163,5 +165,10 @@ class ApplicationState extends ChangeNotifier {
       }
       notifyListeners();
     });
+  }
+
+  void updateRoomData(Map<String, Object?> data) {
+    _roomData = data;
+    notifyListeners();
   }
 }
