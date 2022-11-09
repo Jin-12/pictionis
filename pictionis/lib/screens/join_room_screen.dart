@@ -62,7 +62,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
           docRef.set(room);
           Provider.of<ApplicationState>(context, listen: false)
               .updateRoomData(room);
-          Navigator.pushNamed(context, GameScreen.routeName);
+          Navigator.pushNamed(context, GameScreen.routeName,
+              arguments: ScreenArguments(roomId));
         },
         onError: (e) => print("Error getting document: $e"),
       );

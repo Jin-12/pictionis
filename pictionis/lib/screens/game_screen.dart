@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../main.dart';
@@ -15,12 +16,21 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
+class ScreenArguments {
+  final String id;
+
+  ScreenArguments(this.id);
+}
+
 class _GameScreenState extends State<GameScreen> {
-  final GlobalKey _globalKey = new GlobalKey();
+  final GlobalKey _globalKey = GlobalKey();
   DrawnLine? line;
   List<DrawnLine> lines = <DrawnLine>[];
   Color selectedColor = Colors.black;
   double selectedWidth = 5.0;
+
+/*   StreamController<QuerySnapshot> linesStreamController =
+      StreamController.broadcast(); */
 
   StreamController<List<DrawnLine>> linesStreamController =
       StreamController<List<DrawnLine>>.broadcast();
@@ -32,6 +42,11 @@ class _GameScreenState extends State<GameScreen> {
       lines = [];
       line = null;
     });
+    final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments?;
+    await FirebaseFirestore.instance
+        .collection('rooms')
+        .doc(args!.id)
+        .update({"lines": FieldValue.delete()});
   }
 
   @override
@@ -82,6 +97,7 @@ class _GameScreenState extends State<GameScreen> {
                       width: 15,
                     ),
                     FloatingActionButton(
+                      heroTag: null,
                       onPressed: () {},
                       backgroundColor: Colors.blue,
                       elevation: 0,
@@ -131,13 +147,17 @@ class _GameScreenState extends State<GameScreen> {
           color: Colors.transparent,
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          child: StreamBuilder<DrawnLine>(
-            stream: currentLineStreamController.stream,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('rooms').snapshots(),
             builder: (context, snapshot) {
-              return CustomPaint(
-                painter: Sketcher(
-                  lines: [line],
-                ),
+              if (!snapshot.hasData) return new Text('NO DATA BRUDDA');
+              snapshot.data!.docs.map((DocumentSnapshot document) {
+                return CustomPaint(
+                  painter: Sketcher(lines: document['lines']),
+                );
+              });
+              return Container(
+                child: Text('Error'),
               );
             },
           ),
@@ -182,9 +202,38 @@ class _GameScreenState extends State<GameScreen> {
     currentLineStreamController.add(line!);
   }
 
-  void onPanEnd(DragEndDetails details) {
+  Future<void> onPanEnd(DragEndDetails details) async {
     lines = List.from(lines)..add(line!);
     linesStreamController.add(lines);
+
+    var data = [
+      {
+        'color': line!.color.value,
+        'width': line!.width,
+        'points': [
+          for (var offset in line!.path)
+            {
+              'offset': {
+                'dx': offset!.dx,
+                'dy': offset.dy,
+              },
+            }
+        ],
+      },
+    ];
+    final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments?;
+    print(args!.id);
+    //print(line!.path);
+    /* for (var element in line!.path) {
+      print('${element!.dx} and ${element.dy}');
+    } */
+    print(data);
+    await FirebaseFirestore.instance
+        .collection('rooms')
+        .doc(args.id)
+        .update({"lines": FieldValue.arrayUnion(data)})
+        .then((value) => print("upload!"))
+        .catchError((error) => print(error));
   }
 
   Widget buildStrokeToolbar() {
@@ -267,7 +316,7 @@ class _GameScreenState extends State<GameScreen> {
       onTap: clear,
       child: const CircleAvatar(
         child: Icon(
-          Icons.create,
+          Icons.delete,
           size: 20.0,
           color: Colors.white,
         ),

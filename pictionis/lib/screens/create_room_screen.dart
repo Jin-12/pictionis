@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pictionis/main.dart';
 import 'package:pictionis/screens/game_screen.dart';
+import 'package:pictionis/src/drawn_line.dart';
 import 'package:pictionis/src/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -52,16 +53,18 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       'host': user?.uid,
       'host_name': hostName,
       'players': [player],
+      'lines': [],
       'current_round': 1,
       'joinable': true,
       'created_at': DateTime.now(),
       'turn': 0,
     };
 
-    FirebaseFirestore.instance.collection('rooms').add(room).then(
-        (DocumentReference doc) => print(
-            '"DocumentSnapshot added with ID: ${doc.id}. Room = ${room.toString()}'));
+    final newRoom = FirebaseFirestore.instance.collection('rooms').add(room);
     Provider.of<ApplicationState>(context, listen: false).updateRoomData(room);
-    Navigator.pushNamed(context, GameScreen.routeName);
+    newRoom.then(
+      (documentSnapshot) => Navigator.pushNamed(context, GameScreen.routeName,
+          arguments: ScreenArguments(documentSnapshot.id)),
+    );
   }
 }
