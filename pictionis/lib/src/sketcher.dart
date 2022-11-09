@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 class Sketcher extends CustomPainter {
   final List<DrawnLine?> lines;
-
   Sketcher({required this.lines});
 
   @override

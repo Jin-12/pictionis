@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-import '../main.dart';
 import 'package:pictionis/src/drawn_line.dart';
 import 'package:pictionis/src/sketcher.dart';
 import 'package:flutter/material.dart';
@@ -138,50 +137,113 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   GestureDetector buildCurrentPath(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments?;
     return GestureDetector(
-      onPanStart: onPanStart,
-      onPanUpdate: onPanUpdate,
-      onPanEnd: onPanEnd,
-      child: RepaintBoundary(
-        child: Container(
-          color: Colors.transparent,
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('rooms').snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return new Text('NO DATA BRUDDA');
-              snapshot.data!.docs.map((DocumentSnapshot document) {
-                return CustomPaint(
-                  painter: Sketcher(lines: document['lines']),
-                );
-              });
-              return Container(
-                child: Text('Error'),
-              );
-            },
+        onPanStart: onPanStart,
+        onPanUpdate: onPanUpdate,
+        onPanEnd: onPanEnd,
+        child: RepaintBoundary(
+          child: Container(
+            color: Colors.transparent,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('rooms')
+                    .doc(args!.id)
+                    .snapshots(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (snapshot.hasError) {
+                    return const Text("Something went wrong");
+                  }
+                  if (snapshot.hasData && !snapshot.hasError) {
+                    String receivedData = snapshot.data.toString();
+                    print(receivedData);
+                  }
+
+                  if (snapshot.hasData && !snapshot.data!.exists) {
+                    return const Text("Document does not exist");
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.active) {
+                    Map<String, dynamic> data =
+                        snapshot.data!.data() as Map<String, dynamic>;
+                    List<DrawnLine?> dataLines = [];
+                    if (data['lines'] == null) {
+                      return CustomPaint(
+                        painter: Sketcher(lines: dataLines),
+                      );
+                    }
+                    for (var dataLine in data['lines']) {
+                      List<Offset?> offsetList = [];
+                      for (var i in dataLine['path']) {
+                        Offset offset =
+                            Offset(i['offset']['dx'], i['offset']['dy']);
+                        offsetList.add(offset);
+                      }
+                      Color color = Color(int.parse(dataLine['color']));
+                      double width = dataLine['width'];
+                      line = DrawnLine(offsetList, color, width);
+                      dataLines.add(line);
+                    }
+                    return CustomPaint(
+                      painter: Sketcher(lines: dataLines),
+                    );
+                  }
+                  return const Text("loading");
+                }),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   Widget buildAllPaths(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments?;
     return RepaintBoundary(
       key: _globalKey,
       child: Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
-        child: StreamBuilder<List<DrawnLine>>(
-          stream: linesStreamController.stream,
-          builder: (context, snapshot) {
-            return CustomPaint(
-              painter: Sketcher(
-                lines: lines,
-              ),
-            );
-          },
-        ),
+        child: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('rooms')
+                .doc(args!.id)
+                .snapshots(),
+            builder: (context, AsyncSnapshot snapshot) {
+              if (snapshot.hasError) {
+                return const Text("Something went wrong");
+              }
+
+              if (snapshot.hasData && !snapshot.data!.exists) {
+                return const Text("Document does not exist");
+              }
+
+              if (snapshot.connectionState == ConnectionState.active) {
+                Map<String, dynamic> data =
+                    snapshot.data!.data() as Map<String, dynamic>;
+                List<DrawnLine?> dataLines = [];
+                if (data['lines'] == null) {
+                  return CustomPaint(
+                    painter: Sketcher(lines: dataLines),
+                  );
+                }
+                for (var dataLine in data['lines']) {
+                  List<Offset?> offsetList = [];
+                  for (var i in dataLine['path']) {
+                    Offset offset =
+                        Offset(i['offset']['dx'], i['offset']['dy']);
+                    offsetList.add(offset);
+                  }
+                  Color color = Color(int.parse(dataLine['color']));
+                  double width = dataLine['width'];
+                  line = DrawnLine(offsetList, color, width);
+                  dataLines.add(line);
+                }
+                return CustomPaint(
+                  painter: Sketcher(lines: dataLines),
+                );
+              }
+              return const Text("loading");
+            }),
       ),
     );
   }
@@ -191,7 +253,7 @@ class _GameScreenState extends State<GameScreen> {
     final box = context.findRenderObject() as RenderBox;
     final point = box.globalToLocal(details.globalPosition);
     line = DrawnLine([point], selectedColor, selectedWidth);
-    currentLineStreamController.add(line!);
+    //currentLineStreamController.add(line!);
   }
 
   void onPanUpdate(DragUpdateDetails details) {
@@ -199,18 +261,18 @@ class _GameScreenState extends State<GameScreen> {
     final point = box.globalToLocal(details.globalPosition);
     final path = List<Offset?>.from(line!.path)..add(point);
     line = DrawnLine(path, selectedColor, selectedWidth);
-    currentLineStreamController.add(line!);
+    //currentLineStreamController.add(line!);
   }
 
   Future<void> onPanEnd(DragEndDetails details) async {
     lines = List.from(lines)..add(line!);
-    linesStreamController.add(lines);
+    //linesStreamController.add(lines);
 
-    var data = [
-      {
-        'color': line!.color.value,
-        'width': line!.width,
-        'points': [
+    var dataMap = lines.map((DrawnLine d) {
+      return {
+        'color': d.color.value.toString(),
+        'width': d.width,
+        'path': [
           for (var offset in line!.path)
             {
               'offset': {
@@ -219,19 +281,14 @@ class _GameScreenState extends State<GameScreen> {
               },
             }
         ],
-      },
-    ];
+      };
+    }).toList();
     final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments?;
-    print(args!.id);
-    //print(line!.path);
-    /* for (var element in line!.path) {
-      print('${element!.dx} and ${element.dy}');
-    } */
-    print(data);
+
     await FirebaseFirestore.instance
         .collection('rooms')
-        .doc(args.id)
-        .update({"lines": FieldValue.arrayUnion(data)})
+        .doc(args!.id)
+        .update({"lines": FieldValue.arrayUnion(dataMap)})
         .then((value) => print("upload!"))
         .catchError((error) => print(error));
   }
@@ -299,6 +356,7 @@ class _GameScreenState extends State<GameScreen> {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: FloatingActionButton(
+        heroTag: null,
         mini: true,
         backgroundColor: color,
         child: Container(),
